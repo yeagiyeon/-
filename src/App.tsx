@@ -8,6 +8,7 @@ import {
 
 import { PortfolioItem, Inquiry, SiteSettings, FAQItem, ReviewItem, ClientLogo, ReelsVideoItem } from './types';
 import { INITIAL_PORTFOLIOS, FAQS, REVIEWS, CLIENTS } from './data';
+import customData from './data_custom.json';
 
 // Component imports
 import PortfolioGrid from './components/PortfolioGrid';
@@ -103,87 +104,21 @@ function FAQItemRow({ question, answer }: { question: string, answer: string, ke
 }
 
 export default function App() {
-  const [portfolios, setPortfolios] = useState<PortfolioItem[]>([]);
+  const [portfolios, setPortfolios] = useState<PortfolioItem[]>(() => {
+    return customData.hasCustomData && customData.portfolios && customData.portfolios.length > 0
+      ? customData.portfolios as PortfolioItem[]
+      : [];
+  });
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [reelsVideos, setReelsVideos] = useState<ReelsVideoItem[]>([]);
-
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    heroTitle1: "Build",
-    heroTitle2: "Design",
-    heroTitle3: "Grow",
-    heroSubtitle: "우리는 단순히 예쁜 것을 만드는 회사가 아닙니다.",
-    heroDesc: "고객사의 매출과 브랜드 가치를 동시에 성장시키는 성과 중심 파트너입니다. 기획부터 고품격 디자인, 매력적인 영상 기획/촬영, 정밀 광고 및 브랜드 채널 대행까지 원스톱으로 처리합니다.",
-    statProjects: 250,
-    statVideos: 1500,
-    statDesigns: 3000,
-    statClients: 100,
-    statYears: 10,
-    heroPhoneUrl: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=400",
-    heroPhoneType: "image",
-    shortformTitle1: "릴스 하나가",
-    shortformTitle2: "브랜드를 바꿉니다.",
-    shortformDesc: "단 3초 만에 시청자의 스크롤을 멈추게 만듭니다. 더모아컴퍼니만의 차별화된 숏폼 연구소를 통해 트렌디한 감각과 실질적인 조회수 상승 알고리즘을 이식합니다.",
-    heroMockupTag: "LIVE SUCCESS",
-    heroMockupUser: "the_moa_studio",
-    heroMockupSub: "REELS & SHORTS",
-    heroMockupTitle: "“조회수 185만회 폭발”\n성수 카페 브랜딩 프로젝트",
-    heroMockupDesc: "3초 후킹 공식과 시네마틱 트랜지션을 결합해 오프라인 대기 줄을 형성시켰습니다.",
-    heroMockupBoxLabel: "Metric",
-    heroMockupBoxValue: "조회수 185만 돌파",
+  const [reelsVideos, setReelsVideos] = useState<ReelsVideoItem[]>(() => {
+    return customData.hasCustomData && customData.reelsVideos && customData.reelsVideos.length > 0
+      ? customData.reelsVideos as ReelsVideoItem[]
+      : [];
   });
 
-  const [faqs, setFaqs] = useState<FAQItem[]>([]);
-  const [reviews, setReviews] = useState<ReviewItem[]>([]);
-  const [clients, setClients] = useState<ClientLogo[]>([]);
-
-  // Local storage initialization for CRUD & Sections
-  useEffect(() => {
-    // Portfolios
-    const savedPortfolios = localStorage.getItem('themoa_portfolios');
-    if (savedPortfolios) {
-      try {
-        const parsed = JSON.parse(savedPortfolios) as PortfolioItem[];
-        let updated = false;
-        const enriched = parsed.map(item => {
-          const match = INITIAL_PORTFOLIOS.find(p => p.id === item.id);
-          if (match) {
-            let itemChanged = false;
-            if (!item.media || item.media.length === 0) {
-              item.media = match.media;
-              itemChanged = true;
-            }
-            if (itemChanged) {
-              updated = true;
-            }
-          }
-          return item;
-        });
-        setPortfolios(enriched);
-        if (updated) {
-          localStorage.setItem('themoa_portfolios', JSON.stringify(enriched));
-        }
-      } catch (e) {
-        setPortfolios(INITIAL_PORTFOLIOS);
-      }
-    } else {
-      setPortfolios(INITIAL_PORTFOLIOS);
-      localStorage.setItem('themoa_portfolios', JSON.stringify(INITIAL_PORTFOLIOS));
-    }
-
-    // Inquiries
-    const savedInquiries = localStorage.getItem('themoa_inquiries');
-    if (savedInquiries) {
-      try {
-        setInquiries(JSON.parse(savedInquiries));
-      } catch (e) {
-        setInquiries([]);
-      }
-    }
-
-    // Site Settings
-    const savedSettings = localStorage.getItem('themoa_site_settings');
-    const defaultSettings = {
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
+    const baseSettings: SiteSettings = {
       heroTitle1: "Build",
       heroTitle2: "Design",
       heroTitle3: "Grow",
@@ -207,7 +142,144 @@ export default function App() {
       heroMockupBoxLabel: "Metric",
       heroMockupBoxValue: "조회수 185만 돌파",
     };
+    return customData.hasCustomData && customData.siteSettings
+      ? { ...baseSettings, ...customData.siteSettings } as SiteSettings
+      : baseSettings;
+  });
 
+  const [faqs, setFaqs] = useState<FAQItem[]>(() => {
+    return customData.hasCustomData && customData.faqs && customData.faqs.length > 0
+      ? customData.faqs as FAQItem[]
+      : [];
+  });
+  const [reviews, setReviews] = useState<ReviewItem[]>(() => {
+    return customData.hasCustomData && customData.reviews && customData.reviews.length > 0
+      ? customData.reviews as ReviewItem[]
+      : [];
+  });
+  const [clients, setClients] = useState<ClientLogo[]>(() => {
+    return customData.hasCustomData && customData.clients && customData.clients.length > 0
+      ? customData.clients as ClientLogo[]
+      : [];
+  });
+
+  // Local storage initialization for CRUD & Sections
+  useEffect(() => {
+    // Resolve baked-in defaults
+    const defaultPortfolios = customData.hasCustomData && customData.portfolios && customData.portfolios.length > 0
+      ? customData.portfolios as PortfolioItem[]
+      : INITIAL_PORTFOLIOS;
+
+    const defaultFaqs = customData.hasCustomData && customData.faqs && customData.faqs.length > 0
+      ? customData.faqs as FAQItem[]
+      : FAQS;
+
+    const defaultReviews = customData.hasCustomData && customData.reviews && customData.reviews.length > 0
+      ? customData.reviews as ReviewItem[]
+      : REVIEWS;
+
+    const defaultClients = customData.hasCustomData && customData.clients && customData.clients.length > 0
+      ? customData.clients as ClientLogo[]
+      : CLIENTS;
+
+    const defaultReels = customData.hasCustomData && customData.reelsVideos && customData.reelsVideos.length > 0
+      ? customData.reelsVideos as ReelsVideoItem[]
+      : [
+          {
+            id: 'reels-1',
+            url: 'https://assets.mixkit.co/videos/preview/mixkit-coffee-maker-making-coffee-in-a-cafe-close-up-43180-large.mp4',
+            type: 'video' as const,
+            title: '감성 F&B 숏폼 레퍼런스',
+            likes: '12.4K',
+          },
+          {
+            id: 'reels-2',
+            url: 'https://assets.mixkit.co/videos/preview/mixkit-model-holding-a-bottle-of-skin-care-cream-39903-large.mp4',
+            type: 'video' as const,
+            title: '고도 코스메틱 매크로 연출',
+            likes: '45.2K',
+          },
+          {
+            id: 'reels-3',
+            url: 'https://assets.mixkit.co/videos/preview/mixkit-bright-kitchen-with-wooden-accents-41829-large.mp4',
+            type: 'video' as const,
+            title: '라이프스타일 인테리어 무드',
+            likes: '8.9K',
+          }
+        ];
+
+    const baseSettings: SiteSettings = {
+      heroTitle1: "Build",
+      heroTitle2: "Design",
+      heroTitle3: "Grow",
+      heroSubtitle: "우리는 단순히 예쁜 것을 만드는 회사가 아닙니다.",
+      heroDesc: "고객사의 매출과 브랜드 가치를 동시에 성장시키는 성과 중심 파트너입니다. 기획부터 고품격 디자인, 매력적인 영상 기획/촬영, 정밀 광고 및 브랜드 채널 대행까지 원스톱으로 처리합니다.",
+      statProjects: 250,
+      statVideos: 1500,
+      statDesigns: 3000,
+      statClients: 100,
+      statYears: 10,
+      heroPhoneUrl: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=400",
+      heroPhoneType: "image" as const,
+      shortformTitle1: "릴스 하나가",
+      shortformTitle2: "브랜드를 바꿉니다.",
+      shortformDesc: "단 3초 만에 시청자의 스크롤을 멈추게 만듭니다. 더모아컴퍼니만의 차별화된 숏폼 연구소를 통해 트렌디한 감각과 실질적인 조회수 상승 알고리즘을 이식합니다.",
+      heroMockupTag: "LIVE SUCCESS",
+      heroMockupUser: "the_moa_studio",
+      heroMockupSub: "REELS & SHORTS",
+      heroMockupTitle: "“조회수 185만회 폭발”\n성수 카페 브랜딩 프로젝트",
+      heroMockupDesc: "3초 후킹 공식과 시네마틱 트랜지션을 결합해 오프라인 대기 줄을 형성시켰습니다.",
+      heroMockupBoxLabel: "Metric",
+      heroMockupBoxValue: "조회수 185만 돌파",
+    };
+    const defaultSettings = customData.hasCustomData && customData.siteSettings
+      ? { ...baseSettings, ...customData.siteSettings } as SiteSettings
+      : baseSettings;
+
+    // Portfolios
+    const savedPortfolios = localStorage.getItem('themoa_portfolios');
+    if (savedPortfolios) {
+      try {
+        const parsed = JSON.parse(savedPortfolios) as PortfolioItem[];
+        let updated = false;
+        const enriched = parsed.map(item => {
+          const match = defaultPortfolios.find(p => p.id === item.id);
+          if (match) {
+            let itemChanged = false;
+            if (!item.media || item.media.length === 0) {
+              item.media = match.media;
+              itemChanged = true;
+            }
+            if (itemChanged) {
+              updated = true;
+            }
+          }
+          return item;
+        });
+        setPortfolios(enriched);
+        if (updated) {
+          localStorage.setItem('themoa_portfolios', JSON.stringify(enriched));
+        }
+      } catch (e) {
+        setPortfolios(defaultPortfolios);
+      }
+    } else {
+      setPortfolios(defaultPortfolios);
+      localStorage.setItem('themoa_portfolios', JSON.stringify(defaultPortfolios));
+    }
+
+    // Inquiries
+    const savedInquiries = localStorage.getItem('themoa_inquiries');
+    if (savedInquiries) {
+      try {
+        setInquiries(JSON.parse(savedInquiries));
+      } catch (e) {
+        setInquiries([]);
+      }
+    }
+
+    // Site Settings
+    const savedSettings = localStorage.getItem('themoa_site_settings');
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
@@ -232,29 +304,6 @@ export default function App() {
         // Fallback
       }
     } else {
-      const defaultReels = [
-        {
-          id: 'reels-1',
-          url: 'https://assets.mixkit.co/videos/preview/mixkit-coffee-maker-making-coffee-in-a-cafe-close-up-43180-large.mp4',
-          type: 'video' as const,
-          title: '감성 F&B 숏폼 레퍼런스',
-          likes: '12.4K',
-        },
-        {
-          id: 'reels-2',
-          url: 'https://assets.mixkit.co/videos/preview/mixkit-model-holding-a-bottle-of-skin-care-cream-39903-large.mp4',
-          type: 'video' as const,
-          title: '고도 코스메틱 매크로 연출',
-          likes: '45.2K',
-        },
-        {
-          id: 'reels-3',
-          url: 'https://assets.mixkit.co/videos/preview/mixkit-bright-kitchen-with-wooden-accents-41829-large.mp4',
-          type: 'video' as const,
-          title: '라이프스타일 인테리어 무드',
-          likes: '8.9K',
-        }
-      ];
       setReelsVideos(defaultReels);
       localStorage.setItem('themoa_reels_videos', JSON.stringify(defaultReels));
     }
@@ -265,11 +314,11 @@ export default function App() {
       try {
         setFaqs(JSON.parse(savedFaqs));
       } catch (e) {
-        setFaqs(FAQS);
+        setFaqs(defaultFaqs);
       }
     } else {
-      setFaqs(FAQS);
-      localStorage.setItem('themoa_faqs', JSON.stringify(FAQS));
+      setFaqs(defaultFaqs);
+      localStorage.setItem('themoa_faqs', JSON.stringify(defaultFaqs));
     }
 
     // Reviews
@@ -278,11 +327,11 @@ export default function App() {
       try {
         setReviews(JSON.parse(savedReviews));
       } catch (e) {
-        setReviews(REVIEWS);
+        setReviews(defaultReviews);
       }
     } else {
-      setReviews(REVIEWS);
-      localStorage.setItem('themoa_reviews', JSON.stringify(REVIEWS));
+      setReviews(defaultReviews);
+      localStorage.setItem('themoa_reviews', JSON.stringify(defaultReviews));
     }
 
     // Clients
@@ -291,11 +340,11 @@ export default function App() {
       try {
         setClients(JSON.parse(savedClients));
       } catch (e) {
-        setClients(CLIENTS);
+        setClients(defaultClients);
       }
     } else {
-      setClients(CLIENTS);
-      localStorage.setItem('themoa_clients', JSON.stringify(CLIENTS));
+      setClients(defaultClients);
+      localStorage.setItem('themoa_clients', JSON.stringify(defaultClients));
     }
   }, []);
 

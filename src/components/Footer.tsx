@@ -104,7 +104,7 @@ export default function Footer() {
               <span className="mx-2">|</span>
               <span>대표자: 윤예지</span>
               <span className="mx-2">|</span>
-              <span>사업자등록번호: 123-45-67890</span>
+              <span>사업자등록번호: 508-24-95711</span>
             </div>
             <div>
               <span>통신판매업신고: 제-2026-경기연천-00025호</span>

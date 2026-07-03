@@ -92,6 +92,42 @@ export default function AdminPanel({
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'portfolio' | 'inquiry' | 'sections'>('portfolio');
   const [sectionsSubTab, setSectionsSubTab] = useState<'hero' | 'shortform' | 'faq' | 'reviews' | 'clients'>('hero');
+
+  const [isSavingToCode, setIsSavingToCode] = useState(false);
+  const [saveToCodeSuccess, setSaveToCodeSuccess] = useState<string | null>(null);
+
+  const handleSaveToCode = async () => {
+    setIsSavingToCode(true);
+    setSaveToCodeSuccess(null);
+    try {
+      const response = await fetch('/api/save-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          portfolios,
+          reelsVideos,
+          siteSettings,
+          faqs,
+          reviews,
+          clients,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSaveToCodeSuccess(data.message);
+        setTimeout(() => setSaveToCodeSuccess(null), 12000);
+      } else {
+        alert('저장 실패: ' + (data.error || '알 수 없는 오류가 발생했습니다.'));
+      }
+    } catch (e) {
+      console.error(e);
+      alert('서버 저장 기능 호출 실패. 개발 서버가 정상적으로 동작하는지 확인해 주세요.');
+    } finally {
+      setIsSavingToCode(false);
+    }
+  };
   
   // Form states for Add / Edit Portfolio
   const [isEditing, setIsEditing] = useState(false);
@@ -653,6 +689,53 @@ export default function AdminPanel({
                         <MessageSquare className="w-4 h-4" />
                         <span>고객 문의 내역 ({inquiries.length})</span>
                       </button>
+
+                      {/* Save to Source Code for Deployment */}
+                      <div className="mt-8 pt-4 border-t border-slate-800/80 space-y-3">
+                        <div className="px-3">
+                          <div className="flex items-center gap-1.5 text-[10px] font-mono text-blue-400 font-bold uppercase tracking-widest">
+                            <Sparkles className="w-3 h-3 text-blue-400 animate-pulse" />
+                            <span>DEPLOYMENT SAVER</span>
+                          </div>
+                          <p className="text-[9px] text-slate-500 leading-normal mt-1.5">
+                            현재 추가한 모든 영상, 이미지, 수정한 텍스트 설정을 웹앱 소스코드에 영구적으로 기록합니다. 저장 후 새로 배포하시면, 모든 접속자에게 이 데이터가 완벽히 반영됩니다!
+                          </p>
+                        </div>
+                        
+                        <button
+                          type="button"
+                          onClick={handleSaveToCode}
+                          disabled={isSavingToCode}
+                          className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            saveToCodeSuccess 
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20'
+                          } disabled:opacity-50`}
+                        >
+                          {isSavingToCode ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>기록 중...</span>
+                            </>
+                          ) : saveToCodeSuccess ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 animate-bounce" />
+                              <span>소스코드 저장 완료!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4" />
+                              <span>배포용 소스코드 저장</span>
+                            </>
+                          )}
+                        </button>
+                        
+                        {saveToCodeSuccess && (
+                          <p className="text-[9px] text-emerald-400 font-medium px-2 text-center animate-fade-in whitespace-pre-line leading-relaxed">
+                            {saveToCodeSuccess}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <button
