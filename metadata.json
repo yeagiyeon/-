@@ -1,0 +1,6 @@
+{
+  "name": "더모아컴퍼니 | THE MOA COMPANY",
+  "description": "브랜드의 성장을 만드는 종합 마케팅 파트너, 더모아컴퍼니의 브랜드 포트폴리오 사이트입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
