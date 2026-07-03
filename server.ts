@@ -15,9 +15,11 @@ async function startServer() {
   app.post('/api/save-data', (req, res) => {
     try {
       const { portfolios, reelsVideos, siteSettings, faqs, reviews, clients } = req.body;
+      const timestamp = Date.now();
       
       const customData = {
         hasCustomData: true,
+        updatedAt: timestamp,
         portfolios: portfolios || [],
         reelsVideos: reelsVideos || [],
         siteSettings: siteSettings || null,
@@ -30,7 +32,11 @@ async function startServer() {
       fs.writeFileSync(filePath, JSON.stringify(customData, null, 2), 'utf8');
 
       console.log('Successfully saved custom data to source code for deployment!');
-      res.json({ success: true, message: '설정이 소스코드에 영구적으로 기록되었습니다. 이제 다시 배포하시면 변경한 내용이 배포 버전에도 그대로 적용됩니다!' });
+      res.json({ 
+        success: true, 
+        message: '설정이 소스코드에 영구적으로 기록되었습니다. 이제 다시 배포하시면 변경한 내용이 배포 버전에도 그대로 적용됩니다!',
+        updatedAt: timestamp
+      });
     } catch (error) {
       console.error('Error saving custom data:', error);
       res.status(500).json({ success: false, error: error instanceof Error ? error.message : String(error) });

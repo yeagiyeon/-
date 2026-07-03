@@ -236,6 +236,29 @@ export default function App() {
       ? { ...baseSettings, ...customData.siteSettings } as SiteSettings
       : baseSettings;
 
+    // Sync with baked-in data if server has a newer version (e.g. deployed version)
+    const serverTimestamp = (customData as any).updatedAt || 1;
+    const localSyncTimestamp = Number(localStorage.getItem('themoa_last_sync_timestamp') || '0');
+
+    if (customData.hasCustomData && serverTimestamp > localSyncTimestamp) {
+      localStorage.setItem('themoa_portfolios', JSON.stringify(defaultPortfolios));
+      localStorage.setItem('themoa_site_settings', JSON.stringify(defaultSettings));
+      localStorage.setItem('themoa_reels_videos', JSON.stringify(defaultReels));
+      localStorage.setItem('themoa_faqs', JSON.stringify(defaultFaqs));
+      localStorage.setItem('themoa_reviews', JSON.stringify(defaultReviews));
+      localStorage.setItem('themoa_clients', JSON.stringify(defaultClients));
+      localStorage.setItem('themoa_last_sync_timestamp', String(serverTimestamp));
+      
+      setPortfolios(defaultPortfolios);
+      setSiteSettings(defaultSettings);
+      setReelsVideos(defaultReels);
+      setFaqs(defaultFaqs);
+      setReviews(defaultReviews);
+      setClients(defaultClients);
+      
+      return;
+    }
+
     // Portfolios
     const savedPortfolios = localStorage.getItem('themoa_portfolios');
     if (savedPortfolios) {

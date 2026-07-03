@@ -116,6 +116,9 @@ export default function AdminPanel({
       });
       const data = await response.json();
       if (data.success) {
+        if (data.updatedAt) {
+          localStorage.setItem('themoa_last_sync_timestamp', String(data.updatedAt));
+        }
         setSaveToCodeSuccess(data.message);
         setTimeout(() => setSaveToCodeSuccess(null), 12000);
       } else {
