@@ -24,7 +24,8 @@ const BUDGET_OPTIONS = [
   '100만원 ~ 300만원 (베이직 마케팅 패키지)',
   '300만원 ~ 500만원 (스탠다드 성장 집중 패키지)',
   '500만원 ~ 1000만원 (프리미엄 채널 빌드업)',
-  '1000만원 이상 (연간 토탈 브랜딩 파트너십)'
+  '1000만원 이상 (연간 토탈 브랜딩 파트너십)',
+  '추후 협의'
 ];
 
 export default function ContactForm({ onSubmitInquiry }: ContactFormProps) {

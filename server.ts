@@ -146,6 +146,47 @@ async function startServer() {
   });
 
   // Serve custom uploads directory statically in both development and production (with dist/uploads fallback)
+  app.get('/uploads/:filename', (req, res, next) => {
+    try {
+      const filename = req.params.filename;
+      const safeDirname = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
+      
+      // List of possible absolute paths for this file across different environments (dev/prod, CWD variations)
+      const possibleFilePaths = [
+        path.join(process.cwd(), 'public', 'uploads', filename),
+        path.join(process.cwd(), 'dist', 'uploads', filename),
+        path.join(safeDirname, 'uploads', filename),
+        path.join(safeDirname, '..', 'public', 'uploads', filename),
+        path.join(safeDirname, 'public', 'uploads', filename),
+      ];
+
+      for (const filePath of possibleFilePaths) {
+        try {
+          const resolvedPath = path.resolve(filePath);
+          if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isFile()) {
+            console.log(`[Custom Serve] Serving upload file from: ${resolvedPath}`);
+            return res.sendFile(resolvedPath, (err) => {
+              if (err) {
+                console.error(`[Custom Serve] res.sendFile error for ${resolvedPath}:`, err);
+                if (!res.headersSent) {
+                  res.status(500).send(`Error serving file: ${err.message}`);
+                }
+              }
+            });
+          }
+        } catch (err) {
+          // ignore check errors and try next
+        }
+      }
+
+      console.warn(`[Custom Serve] Upload file not found: ${filename}`);
+      next(); // Pass to express.static or other fallbacks
+    } catch (routeErr: any) {
+      console.error(`[Custom Serve] Route exception:`, routeErr);
+      res.status(500).send(`Route exception: ${routeErr.message || routeErr}`);
+    }
+  });
+
   app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
   app.use('/uploads', express.static(path.join(process.cwd(), 'dist', 'uploads')));
 
