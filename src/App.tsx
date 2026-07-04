@@ -11,6 +11,51 @@ import { INITIAL_PORTFOLIOS, FAQS, REVIEWS, CLIENTS } from './data';
 import customDataRaw from './data_custom.json';
 const customData = customDataRaw as any;
 
+// Helper to safely set item in localStorage even when storage quota is exceeded
+function safeSetItem(key: string, value: string) {
+  // If the value itself is extremely large (e.g. contains big base64 uploads over 1MB),
+  // we do not save it to localStorage to prevent QuotaExceededError entirely.
+  // The state will still be kept in React memory, and the user can save to server successfully.
+  if (value.length > 1024 * 1024) {
+    console.warn(`Value for key "${key}" is too large (${(value.length / (1024 * 1024)).toFixed(2)} MB) for localStorage. Skipping storage write to prevent quota exceed errors.`);
+    return;
+  }
+
+  try {
+    localStorage.setItem(key, value);
+  } catch (e: any) {
+    console.warn(`LocalStorage setItem failed for key "${key}":`, e.message || e);
+    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22) {
+      try {
+        console.log('Quota exceeded. Cleaning up large base64 keys from localStorage...');
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k) {
+            const val = localStorage.getItem(k) || '';
+            if (val.length > 50 * 1024) { // 50KB limit to catch base64 files
+              keysToRemove.push(k);
+            }
+          }
+        }
+        keysToRemove.forEach(k => {
+          localStorage.removeItem(k);
+        });
+        localStorage.setItem(key, value);
+        console.log(`Successfully saved "${key}" after cleaning up large values.`);
+      } catch (retryError: any) {
+        console.warn(`Retry saving "${key}" failed, clearing all and retrying...`);
+        try {
+          localStorage.clear();
+          localStorage.setItem(key, value);
+        } catch (finalError: any) {
+          console.warn(`Failed to save "${key}" even after localStorage clear:`, finalError.message || finalError);
+        }
+      }
+    }
+  }
+}
+
 // Component imports
 import PortfolioGrid from './components/PortfolioGrid';
 import ShortformStudio from './components/ShortformStudio';
@@ -242,13 +287,13 @@ export default function App() {
     const localSyncTimestamp = Number(localStorage.getItem('themoa_last_sync_timestamp') || '0');
 
     if (customData.hasCustomData && serverTimestamp > localSyncTimestamp) {
-      localStorage.setItem('themoa_portfolios', JSON.stringify(defaultPortfolios));
-      localStorage.setItem('themoa_site_settings', JSON.stringify(defaultSettings));
-      localStorage.setItem('themoa_reels_videos', JSON.stringify(defaultReels));
-      localStorage.setItem('themoa_faqs', JSON.stringify(defaultFaqs));
-      localStorage.setItem('themoa_reviews', JSON.stringify(defaultReviews));
-      localStorage.setItem('themoa_clients', JSON.stringify(defaultClients));
-      localStorage.setItem('themoa_last_sync_timestamp', String(serverTimestamp));
+      safeSetItem('themoa_portfolios', JSON.stringify(defaultPortfolios));
+      safeSetItem('themoa_site_settings', JSON.stringify(defaultSettings));
+      safeSetItem('themoa_reels_videos', JSON.stringify(defaultReels));
+      safeSetItem('themoa_faqs', JSON.stringify(defaultFaqs));
+      safeSetItem('themoa_reviews', JSON.stringify(defaultReviews));
+      safeSetItem('themoa_clients', JSON.stringify(defaultClients));
+      safeSetItem('themoa_last_sync_timestamp', String(serverTimestamp));
       
       setPortfolios(defaultPortfolios);
       setSiteSettings(defaultSettings);
@@ -282,14 +327,14 @@ export default function App() {
         });
         setPortfolios(enriched);
         if (updated) {
-          localStorage.setItem('themoa_portfolios', JSON.stringify(enriched));
+          safeSetItem('themoa_portfolios', JSON.stringify(enriched));
         }
       } catch (e) {
         setPortfolios(defaultPortfolios);
       }
     } else {
       setPortfolios(defaultPortfolios);
-      localStorage.setItem('themoa_portfolios', JSON.stringify(defaultPortfolios));
+      safeSetItem('themoa_portfolios', JSON.stringify(defaultPortfolios));
     }
 
     // Inquiries
@@ -316,7 +361,7 @@ export default function App() {
       }
     } else {
       setSiteSettings(defaultSettings);
-      localStorage.setItem('themoa_site_settings', JSON.stringify(defaultSettings));
+      safeSetItem('themoa_site_settings', JSON.stringify(defaultSettings));
     }
 
     // Reels Videos
@@ -329,7 +374,7 @@ export default function App() {
       }
     } else {
       setReelsVideos(defaultReels);
-      localStorage.setItem('themoa_reels_videos', JSON.stringify(defaultReels));
+      safeSetItem('themoa_reels_videos', JSON.stringify(defaultReels));
     }
 
     // FAQs
@@ -342,7 +387,7 @@ export default function App() {
       }
     } else {
       setFaqs(defaultFaqs);
-      localStorage.setItem('themoa_faqs', JSON.stringify(defaultFaqs));
+      safeSetItem('themoa_faqs', JSON.stringify(defaultFaqs));
     }
 
     // Reviews
@@ -355,7 +400,7 @@ export default function App() {
       }
     } else {
       setReviews(defaultReviews);
-      localStorage.setItem('themoa_reviews', JSON.stringify(defaultReviews));
+      safeSetItem('themoa_reviews', JSON.stringify(defaultReviews));
     }
 
     // Clients
@@ -368,74 +413,44 @@ export default function App() {
       }
     } else {
       setClients(defaultClients);
-      localStorage.setItem('themoa_clients', JSON.stringify(defaultClients));
+      safeSetItem('themoa_clients', JSON.stringify(defaultClients));
     }
   }, []);
 
   // Sync states to local storage on changes
   const savePortfolios = (updated: PortfolioItem[]) => {
     setPortfolios(updated);
-    try {
-      localStorage.setItem('themoa_portfolios', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage portfolios save failed:', e);
-      alert('브라우저 저장공간 한계를 초과하여 포트폴리오 변경사항이 이번 세션에만 임시 유지됩니다. (2MB 이하의 가벼운 업로드 파일이나 직접 URL 입력을 권장합니다)');
-    }
+    safeSetItem('themoa_portfolios', JSON.stringify(updated));
   };
 
   const handleSaveSiteSettings = (updated: SiteSettings) => {
     setSiteSettings(updated);
-    try {
-      localStorage.setItem('themoa_site_settings', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage site settings save failed:', e);
-    }
+    safeSetItem('themoa_site_settings', JSON.stringify(updated));
   };
 
   const handleSaveFaqs = (updated: FAQItem[]) => {
     setFaqs(updated);
-    try {
-      localStorage.setItem('themoa_faqs', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage FAQs save failed:', e);
-    }
+    safeSetItem('themoa_faqs', JSON.stringify(updated));
   };
 
   const handleSaveReviews = (updated: ReviewItem[]) => {
     setReviews(updated);
-    try {
-      localStorage.setItem('themoa_reviews', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage reviews save failed:', e);
-    }
+    safeSetItem('themoa_reviews', JSON.stringify(updated));
   };
 
   const handleSaveClients = (updated: ClientLogo[]) => {
     setClients(updated);
-    try {
-      localStorage.setItem('themoa_clients', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage clients save failed:', e);
-    }
+    safeSetItem('themoa_clients', JSON.stringify(updated));
   };
 
   const handleSaveReelsVideos = (updated: ReelsVideoItem[]) => {
     setReelsVideos(updated);
-    try {
-      localStorage.setItem('themoa_reels_videos', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage reels videos save failed:', e);
-      alert('브라우저 저장공간 한계를 초과하여 쇼츠 레퍼런스 변경사항이 이번 세션에만 임시 유지됩니다. (2MB 이하의 가볍고 짧은 비디오/이미지를 사용하시거나 직접 링크 주소(URL) 입력을 권장합니다)');
-    }
+    safeSetItem('themoa_reels_videos', JSON.stringify(updated));
   };
 
   const saveInquiries = (updated: Inquiry[]) => {
     setInquiries(updated);
-    try {
-      localStorage.setItem('themoa_inquiries', JSON.stringify(updated));
-    } catch (e) {
-      console.error('LocalStorage inquiries save failed:', e);
-    }
+    safeSetItem('themoa_inquiries', JSON.stringify(updated));
   };
 
   // Portfolio actions
@@ -499,13 +514,13 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <a href="#hero-section" className="flex items-center gap-2 cursor-pointer hover:opacity-85 transition-opacity">
               <span className="font-sans text-xl tracking-tight text-slate-900 select-none">
                 <span className="font-light">the</span>
                 <span className="font-extrabold text-blue-600">moa</span>
                 <span className="font-light text-slate-500">company</span>
               </span>
-            </div>
+            </a>
 
             {/* Nav Links */}
             <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-[11px] font-bold tracking-wider uppercase">
@@ -540,7 +555,7 @@ export default function App() {
       </header>
 
       {/* 2. Hero Section */}
-      <section className="relative pt-32 pb-24 md:pt-44 md:pb-36 bg-[#f8fafc] overflow-hidden min-h-[90vh] flex items-center border-b border-slate-200/85">
+      <section id="hero-section" className="relative pt-32 pb-24 md:pt-44 md:pb-36 bg-[#f8fafc] overflow-hidden min-h-[90vh] flex items-center border-b border-slate-200/85">
         {/* Creative Abstract Background Lines & Lights */}
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,rgba(59,130,246,0.05),transparent_50%)]" />
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-500/5 rounded-full blur-[140px]" />
