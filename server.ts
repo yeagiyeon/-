@@ -135,6 +135,9 @@ async function startServer() {
     res.json({ status: 'ok' });
   });
 
+  // Serve custom uploads directory statically in both development and production
+  app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
