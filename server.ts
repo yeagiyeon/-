@@ -63,6 +63,16 @@ async function startServer() {
       fs.writeFileSync(filePath, buffer);
       console.log(`Saved newly uploaded base64 file to ${filePath}`);
 
+      // Also save to dist/uploads if dist exists so it is immediately served in production
+      const distUploadsDir = path.join(process.cwd(), 'dist', 'uploads');
+      if (fs.existsSync(path.join(process.cwd(), 'dist'))) {
+        if (!fs.existsSync(distUploadsDir)) {
+          fs.mkdirSync(distUploadsDir, { recursive: true });
+        }
+        fs.writeFileSync(path.join(distUploadsDir, filename), buffer);
+        console.log(`Saved backup upload to: ${path.join(distUploadsDir, filename)}`);
+      }
+
       return `/uploads/${filename}`;
     } catch (error) {
       console.error('Error saving base64 file:', error);
@@ -135,8 +145,9 @@ async function startServer() {
     res.json({ status: 'ok' });
   });
 
-  // Serve custom uploads directory statically in both development and production
+  // Serve custom uploads directory statically in both development and production (with dist/uploads fallback)
   app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+  app.use('/uploads', express.static(path.join(process.cwd(), 'dist', 'uploads')));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

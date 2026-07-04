@@ -282,11 +282,11 @@ export default function App() {
       ? { ...baseSettings, ...customData.siteSettings } as SiteSettings
       : baseSettings;
 
-    // Sync with baked-in data if server has a newer version (e.g. deployed version)
+    // Sync with baked-in data if server has a newer or same version (e.g. deployed version)
     const serverTimestamp = (customData as any).updatedAt || 1;
     const localSyncTimestamp = Number(localStorage.getItem('themoa_last_sync_timestamp') || '0');
 
-    if (customData.hasCustomData && serverTimestamp > localSyncTimestamp) {
+    if (customData.hasCustomData && serverTimestamp >= localSyncTimestamp) {
       safeSetItem('themoa_portfolios', JSON.stringify(defaultPortfolios));
       safeSetItem('themoa_site_settings', JSON.stringify(defaultSettings));
       safeSetItem('themoa_reels_videos', JSON.stringify(defaultReels));
