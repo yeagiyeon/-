@@ -8,7 +8,8 @@ import {
 
 import { PortfolioItem, Inquiry, SiteSettings, FAQItem, ReviewItem, ClientLogo, ReelsVideoItem } from './types';
 import { INITIAL_PORTFOLIOS, FAQS, REVIEWS, CLIENTS } from './data';
-import customData from './data_custom.json';
+import customDataRaw from './data_custom.json';
+const customData = customDataRaw as any;
 
 // Component imports
 import PortfolioGrid from './components/PortfolioGrid';
