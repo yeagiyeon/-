@@ -5,7 +5,7 @@ import {
   MessageSquareCode, Tv, Film, FileText, Camera, Edit3, ShieldAlert, Check, BarChart3
 } from 'lucide-react';
 
-import { ReelsVideoItem, SiteSettings } from '../types';
+import { ReelsVideoItem, SiteSettings, isVideoFile } from '../types';
 
 const STEPS = [
   { step: '01', title: '기획 / 시나리오', desc: '타겟 분석 후 초반 3초 매력적인 훅(Hook) 설계 및 상세 스크립트 도출', icon: FileText },
@@ -121,7 +121,7 @@ export default function ShortformStudio({ reelsVideos = [], siteSettings }: Shor
               <div className="relative w-full h-full rounded-[34px] overflow-hidden bg-black flex flex-col justify-end">
                 {/* Looping video/image based on active style */}
                 {activeVideo ? (
-                  activeVideo.type === 'video' ? (
+                  (activeVideo.type === 'video' || isVideoFile(activeVideo.url)) ? (
                     <video
                       key={activeVideo.id || activeVideo.url}
                       src={activeVideo.url}

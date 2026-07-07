@@ -5,7 +5,7 @@ import { createServer as createViteServer } from 'vite';
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   // Parse large JSON bodies (for Base64 images and videos)
   app.use(express.json({ limit: '50mb' }));
@@ -180,7 +180,7 @@ async function startServer() {
       }
 
       console.warn(`[Custom Serve] Upload file not found: ${filename}`);
-      next(); // Pass to express.static or other fallbacks
+      return res.status(404).send('Upload file not found');
     } catch (routeErr: any) {
       console.error(`[Custom Serve] Route exception:`, routeErr);
       res.status(500).send(`Route exception: ${routeErr.message || routeErr}`);
@@ -201,6 +201,9 @@ async function startServer() {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
+      if (req.path.startsWith('/uploads/') || req.path.startsWith('/assets/')) {
+        return res.status(404).send('Asset not found');
+      }
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

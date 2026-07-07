@@ -6,7 +6,7 @@ import {
   Volume2, ShieldCheck, Heart, Send, BookOpen, Clock, Smartphone
 } from 'lucide-react';
 
-import { PortfolioItem, Inquiry, SiteSettings, FAQItem, ReviewItem, ClientLogo, ReelsVideoItem } from './types';
+import { PortfolioItem, Inquiry, SiteSettings, FAQItem, ReviewItem, ClientLogo, ReelsVideoItem, isVideoFile } from './types';
 import { INITIAL_PORTFOLIOS, FAQS, REVIEWS, CLIENTS } from './data';
 import customDataRaw from './data_custom.json';
 const customData = customDataRaw as any;
@@ -661,7 +661,7 @@ export default function App() {
                       >
                         {/* Multi Layer Slides representing works */}
                         <div className="w-full h-full flex flex-col justify-between p-6 relative">
-                          {siteSettings.heroPhoneType === 'video' ? (
+                          {(siteSettings.heroPhoneType === 'video' || isVideoFile(siteSettings.heroPhoneUrl)) ? (
                             <video
                               src={siteSettings.heroPhoneUrl || "https://assets.mixkit.co/videos/preview/mixkit-coffee-maker-making-coffee-in-a-cafe-close-up-43180-large.mp4"}
                               className="absolute inset-0 w-full h-full object-cover opacity-55 pointer-events-none"

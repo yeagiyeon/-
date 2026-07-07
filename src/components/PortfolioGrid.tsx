@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PortfolioItem } from '../types';
+import { PortfolioItem, isVideoFile } from '../types';
 import { Grid, Eye, Calendar, Award, X, Sparkles, ArrowUpRight } from 'lucide-react';
 
 interface PortfolioGridProps {
@@ -140,12 +140,23 @@ export default function PortfolioGrid({ items }: PortfolioGridProps) {
               >
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
+                  {isVideoFile(item.imageUrl) ? (
+                    <video
+                      src={item.imageUrl}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      muted
+                      loop
+                      playsInline
+                      autoPlay
+                    />
+                  ) : (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-40 group-hover:opacity-25 transition-opacity duration-500" />
                   
                   {/* Category Badge on Image */}
@@ -236,7 +247,7 @@ export default function PortfolioGrid({ items }: PortfolioGridProps) {
                         ? selectedItem.media
                         : [
                             ...(selectedItem.videoUrl ? [{ id: 'init-vid', type: 'video' as const, url: selectedItem.videoUrl }] : []),
-                            ...(selectedItem.imageUrl ? [{ id: 'init-img', type: 'image' as const, url: selectedItem.imageUrl }] : [])
+                            ...(selectedItem.imageUrl ? [{ id: 'init-img', type: isVideoFile(selectedItem.imageUrl) ? 'video' as const : 'image' as const, url: selectedItem.imageUrl }] : [])
                           ];
                       
                       const currentMedia = mediaList[activeMediaIndex] || mediaList[0];

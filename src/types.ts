@@ -83,3 +83,18 @@ export interface ReelsVideoItem {
   likes: string;
 }
 
+export function isVideoFile(url: string | undefined): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return (
+    lower.endsWith('.mp4') || 
+    lower.endsWith('.webm') || 
+    lower.endsWith('.mov') || 
+    lower.endsWith('.ogg') || 
+    lower.startsWith('data:video/') ||
+    lower.includes('.mp4?') ||
+    lower.includes('.webm?') ||
+    lower.includes('.mov?')
+  );
+}
+
