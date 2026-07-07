@@ -652,7 +652,7 @@ export default function App() {
                   <div className="w-full h-full relative">
                     <AnimatePresence mode="wait">
                       <motion.div
-                        key={Date.now()}
+                        key={siteSettings.heroPhoneUrl}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -663,8 +663,9 @@ export default function App() {
                         <div className="w-full h-full flex flex-col justify-between p-6 relative">
                           {(siteSettings.heroPhoneType === 'video' || isVideoFile(siteSettings.heroPhoneUrl)) ? (
                             <video
+                              key={siteSettings.heroPhoneUrl}
                               src={siteSettings.heroPhoneUrl || "https://assets.mixkit.co/videos/preview/mixkit-coffee-maker-making-coffee-in-a-cafe-close-up-43180-large.mp4"}
-                              className="absolute inset-0 w-full h-full object-cover opacity-55 pointer-events-none"
+                              className="absolute inset-0 w-full h-full object-cover opacity-100 pointer-events-none"
                               autoPlay
                               muted
                               loop
@@ -672,10 +673,11 @@ export default function App() {
                             />
                           ) : (
                             <img 
+                              key={siteSettings.heroPhoneUrl}
                               src={siteSettings.heroPhoneUrl || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&q=80&w=400"}
                               alt="Visual mock"
                               referrerPolicy="no-referrer"
-                              className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-lighten pointer-events-none"
+                              className="absolute inset-0 w-full h-full object-cover opacity-100 pointer-events-none"
                             />
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/20 z-10" />
